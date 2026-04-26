@@ -5,22 +5,33 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
 
-// 🔥 Supabase connection (همونی که دادی)
+// 🔥 مهم: برای Render
+const PORT = process.env.PORT || 3000;
+
+// 🔥 Supabase (از ENV می‌گیریم)
 const supabase = createClient(
-  "https://skmtdrjluilrjisebqrz.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrbXRkcmpsdWlscmppc2VicXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTg4MzgsImV4cCI6MjA5MjY5NDgzOH0.BUrILSHfufgXAln97-e2NGhLV9uHGRJ2Ub1_LtoJiiM"
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
 );
 
-app.get("/", (req, res) => {
-  res.send("Chat server running");
+// 🔥 Socket
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
 });
 
+// تست ساده
+app.get("/", (req, res) => {
+  res.send("Server is running 🚀");
+});
+
+// اتصال کاربر
 io.on("connection", async (socket) => {
   console.log("User connected");
 
-  // 🔥 گرفتن پیام‌های قبلی
+  // گرفتن history
   const { data, error } = await supabase
     .from("messages")
     .select("*")
@@ -32,7 +43,7 @@ io.on("connection", async (socket) => {
     console.log("History error:", error);
   }
 
-  // 🔥 پیام جدید
+  // پیام جدید
   socket.on("message", async (msg) => {
     console.log("MSG:", msg);
 
@@ -51,6 +62,7 @@ io.on("connection", async (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log("Server running on port 3000");
+// 🚀 اجرای سرور
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
